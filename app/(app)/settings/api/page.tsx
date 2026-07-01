@@ -5,9 +5,9 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { settingsApi } from '../../_lib/api';
-import { useAuth } from '../../_components/AuthProvider';
-import { ApiKeyResponse, TIER_LIMITS } from '../../_lib/types';
+import { settingsApi } from '@/app/_lib/api';
+import { useAuth } from '@/app/_components/AuthProvider';
+import { ApiKeyResponse, TIER_LIMITS } from '@/app/_lib/types';
 import { Lock, Key, Loader2, Copy, Check, AlertCircle } from 'lucide-react';
 
 export default function APIPage() {

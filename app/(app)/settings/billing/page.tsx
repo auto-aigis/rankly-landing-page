@@ -7,9 +7,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { settingsApi } from '../../_lib/api';
-import { Tier, TIER_LIMITS } from '../../_lib/types';
-import { useAuth } from '../../_components/AuthProvider';
+import { settingsApi } from '@/app/_lib/api';
+import { Tier, TIER_LIMITS } from '@/app/_lib/types';
+import { useAuth } from '@/app/_components/AuthProvider';
 import { CreditCard, Calendar, AlertCircle, ExternalLink } from 'lucide-react';
 
 export default function BillingPage() {

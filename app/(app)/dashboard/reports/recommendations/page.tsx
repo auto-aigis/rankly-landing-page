@@ -6,9 +6,9 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { reportsApi } from '../../../_lib/api';
-import { useAuth } from '../../../_components/AuthProvider';
-import { Recommendation, TIER_LIMITS } from '../../../_lib/types';
+import { reportsApi } from '@/app/_lib/api';
+import { useAuth } from '@/app/_components/AuthProvider';
+import { Recommendation, TIER_LIMITS } from '@/app/_lib/types';
 import { Lock, Lightbulb, Loader2, Check } from 'lucide-react';
 import Link from 'next/link';
 

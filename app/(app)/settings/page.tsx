@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { settingsApi } from '../../_lib/api';
-import { SettingsData } from '../../_lib/types';
+import { settingsApi } from '@/app/_lib/api';
+import { SettingsData } from '@/app/_lib/types';
 import { Loader2, Save, Key, AlertCircle, Check } from 'lucide-react';
 
 export default function SettingsPage() {

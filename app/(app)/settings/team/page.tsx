@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { settingsApi } from '../../_lib/api';
-import { useAuth } from '../../_components/AuthProvider';
-import { TeamMember, TIER_LIMITS } from '../../_lib/types';
+import { settingsApi } from '@/app/_lib/api';
+import { useAuth } from '@/app/_components/AuthProvider';
+import { TeamMember, TIER_LIMITS } from '@/app/_lib/types';
 import { Lock, Users, Loader2, Mail, Trash2, AlertCircle, Check } from 'lucide-react';
 
 export default function TeamPage() {

@@ -5,9 +5,9 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { reportsApi } from '../../../_lib/api';
-import { useAuth } from '../../../_components/AuthProvider';
-import { CompetitorReportItem, TIER_LIMITS } from '../../../_lib/types';
+import { reportsApi } from '@/app/_lib/api';
+import { useAuth } from '@/app/_components/AuthProvider';
+import { CompetitorReportItem, TIER_LIMITS } from '@/app/_lib/types';
 import { Lock, Users } from 'lucide-react';
 import Link from 'next/link';
 

@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { coreApi } from '../../_lib/api';
-import { useAuth } from '../../_components/AuthProvider';
-import { TIER_LIMITS, Query } from '../../_lib/types';
+import { coreApi } from '@/app/_lib/api';
+import { useAuth } from '@/app/_components/AuthProvider';
+import { TIER_LIMITS, Query } from '@/app/_lib/types';
 import { Plus, Trash2, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 
 export default function QueriesPage() {
