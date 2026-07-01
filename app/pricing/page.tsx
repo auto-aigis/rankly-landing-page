@@ -107,7 +107,7 @@ function PricingContent() {
                 <CardContent>
                   <div className="mb-6">
                     <span className="text-4xl font-bold text-gray-900">${price}</span>
-                    {tier !== 'free' && <span className="text-gray-500">/month</span>
+                    {tier !== 'free' && <span className="text-gray-500">/month</span>}
                   </div>
                   <ul className="space-y-3">
                     {FEATURES.map((feature) => {
