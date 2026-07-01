@@ -5,9 +5,9 @@ export const dynamic = 'force-dynamic';
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { coreApi, paddleApi, authApi } from '../../_lib/api';
-import { useAuth } from '../../_components/AuthProvider';
-import { DashboardData, TIER_LIMITS } from '../../_lib/types';
+import { coreApi, paddleApi, authApi } from '@/app/_lib/api';
+import { useAuth } from '@/app/_components/AuthProvider';
+import { DashboardData, TIER_LIMITS } from '@/app/_lib/types';
 import { TrendingUp, MessageCircle, FileText, Clock, Check, X } from 'lucide-react';
 
 function ScoreRing({ score, label }: { score: number; label: string }) {

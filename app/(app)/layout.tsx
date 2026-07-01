@@ -2,8 +2,8 @@
 
 import { useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../_components/AuthProvider';
-import { AppShell } from '../_components/AppShell';
+import { useAuth } from '@/app/_components/AuthProvider';
+import { AppShell } from '@/app/_components/AppShell';
 
 function AuthGuard({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
