@@ -127,6 +127,7 @@ function VerifyEmailContent() {
 }
 
 export default function VerifyEmailPage() {
+export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

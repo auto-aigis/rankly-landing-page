@@ -2,30 +2,34 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { authApi } from '../_lib/api';
 
-export default function RegisterPage() {
+function RegisterContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const scanId = searchParams.get('scan_id') || undefined;
+  const brandName = searchParams.get('brand') || '';
+  const utmSource = searchParams.get('utm_source') || undefined;
+  const utmMedium = searchParams.get('utm_medium') || undefined;
+  const utmCampaign = searchParams.get('utm_campaign') || undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
-      await authApi.register(email, password);
+      await authApi.register(email, password, scanId, utmSource, utmMedium, utmCampaign);
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
@@ -46,16 +50,19 @@ export default function RegisterPage() {
             </div>
             <span className="text-xl font-bold text-gray-900">Rankly</span>
           </div>
-          <CardTitle className="text-2xl text-center">Create an account</CardTitle>
-          <CardDescription className="text-center">Start tracking your AI visibility</CardDescription>
+          <CardTitle className="text-2xl text-center">Create your free account</CardTitle>
+          <CardDescription className="text-center">
+            {brandName ? `Save your AI Visibility Score for ${brandName}` : 'Start tracking your AI visibility'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
+          {brandName && (
+            <div className="mb-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-sm text-indigo-700">
+              📈 Your scan for <strong>{brandName}</strong> will be saved to your account.
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">{error}</div>}
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" required />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
@@ -65,17 +72,30 @@ export default function RegisterPage() {
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" minLength={8} required />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating account...' : 'Create account'}
+              {loading ? 'Creating account...' : 'Create free account'}
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-gray-600">
             Already have an account?{' '}
-            <Link href="/login" className="font-medium text-indigo-600 hover:underline">
-              Sign in
-            </Link>
+            <Link href="/login" className="font-medium text-indigo-600 hover:underline">Sign in</Link>
+          </p>
+          <p className="mt-2 text-center text-xs text-gray-400">
+            No credit card required &bull; Free forever
           </p>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full" />
+      </div>
+    }>
+      <RegisterContent />
+    </Suspense>
   );
 }

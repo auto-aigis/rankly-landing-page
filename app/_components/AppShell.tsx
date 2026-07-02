@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Search,
   BarChart3,
-  Quote,
   Users,
   Lightbulb,
   Settings,
@@ -18,6 +17,7 @@ import {
   LogOut,
   TrendingUp,
   FileText,
+  Link2,
 } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 import { authApi } from '../_lib/api';
@@ -26,7 +26,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/queries', label: 'Queries', icon: Search },
   { href: '/dashboard/reports/visibility', label: 'Visibility', icon: TrendingUp },
-  { href: '/dashboard/reports/citations', label: 'Citations', icon: Quote },
+  { href: '/dashboard/reports/citations', label: 'Citations', icon: Link2 },
   { href: '/dashboard/reports/competitors', label: 'Competitors', icon: Users },
   { href: '/dashboard/reports/gaps', label: 'Knowledge Gaps', icon: FileText },
   { href: '/dashboard/reports/recommendations', label: 'Recommendations', icon: Lightbulb },
@@ -46,12 +46,7 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
   const { user, logout } = useAuth();
-
-  const handleLogout = async () => {
-    await logout();
-  };
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
@@ -97,7 +92,7 @@ export function AppShell({ children }: AppShellProps) {
           </Link>
         ))}
         <button
-          onClick={handleLogout}
+          onClick={logout}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
         >
           <LogOut className="w-5 h-5" />
@@ -109,7 +104,6 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile header */}
       <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-200 z-40 flex items-center px-4">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -125,7 +119,6 @@ export function AppShell({ children }: AppShellProps) {
         </Link>
       </header>
 
-      {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
           className="md:hidden fixed inset-0 bg-black/20 z-40"
@@ -133,7 +126,6 @@ export function AppShell({ children }: AppShellProps) {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 bottom-0 w-64 bg-white border-r border-gray-200 z-50 flex flex-col transition-transform duration-200 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -142,7 +134,6 @@ export function AppShell({ children }: AppShellProps) {
         <NavContent />
       </aside>
 
-      {/* Main content */}
       <main className="md:ml-64 p-4 md:p-6 pt-16 md:pt-6 min-h-screen">
         {children}
       </main>

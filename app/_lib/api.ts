@@ -1,4 +1,4 @@
-import { Tier, BillingInterval, QueryEngine, DashboardData, Query, VisibilityReportItem, CitationReportItem, CompetitorReportItem, GapReportItem, Recommendation, TeamMember, SettingsData, CheckoutResponse, ApiKeyResponse, Subscription } from './types';
+import { Tier, BillingInterval, DashboardData, Query, VisibilityReportItem, CitationReportItem, CompetitorReportItem, GapReportItem, Recommendation, TeamMember, SettingsData, CheckoutResponse, ApiKeyResponse, Subscription, ScanResult } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -24,10 +24,10 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
 }
 
 export const authApi = {
-  register: (email: string, password: string) =>
+  register: (email: string, password: string, scan_id?: string, utm_source?: string, utm_medium?: string, utm_campaign?: string) =>
     apiFetch<{ status: string; email: string }>('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, scan_id, utm_source, utm_medium, utm_campaign }),
     }),
 
   login: (email: string, password: string) =>
@@ -53,6 +53,16 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify({ email }),
     }),
+};
+
+export const scanApi = {
+  run: (brandName: string, category?: string) =>
+    apiFetch<ScanResult>('/api/scan', {
+      method: 'POST',
+      body: JSON.stringify({ brand_name: brandName, category }),
+    }),
+
+  get: (scanId: string) => apiFetch<ScanResult>(`/api/scan/${scanId}`),
 };
 
 export const coreApi = {
@@ -81,18 +91,12 @@ export const coreApi = {
 
 export const reportsApi = {
   getVisibility: () => apiFetch<VisibilityReportItem[]>('/api/reports/visibility'),
-
   getCitations: () => apiFetch<CitationReportItem[]>('/api/reports/citations'),
-
   getCompetitors: () => apiFetch<CompetitorReportItem[]>('/api/reports/competitors'),
-
   getGaps: () => apiFetch<GapReportItem[]>('/api/reports/gaps'),
-
   getRecommendations: () => apiFetch<Recommendation[]>('/api/reports/recommendations'),
-
   generateRecommendation: (queryId: string) =>
     apiFetch<{ status: string }>(`/api/reports/recommendations/generate?query_id=${queryId}`, { method: 'POST' }),
-
   exportCsv: (reportType: string) => apiFetch<{ csv_data: string }>(`/api/reports/export/csv?type=${reportType}`),
 };
 

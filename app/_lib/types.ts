@@ -26,10 +26,10 @@ export interface Competitor {
 
 export interface Subscription {
   tier: Tier;
-  status: 'active' | 'canceled' | 'past_due';
+  status: 'active' | 'canceled' | 'past_due' | 'inactive';
   current_period_end: string | null;
   price_id: string | null;
-  billing_interval: BillingInterval | null;
+  billing_interval?: BillingInterval | null;
 }
 
 export interface DashboardData {
@@ -50,7 +50,7 @@ export interface RecentFeedItem {
 export interface Query {
   id: string;
   query_text: string;
-  last_run: string | null;
+  last_run?: string | null;
   created_at: string;
 }
 
@@ -125,6 +125,29 @@ export interface ApiKeyResponse {
   created_at: string;
 }
 
+export interface ScanCompetitorScore {
+  name: string;
+  score: number;
+}
+
+export interface ScanRecommendation {
+  action: string;
+  estimated_lift: string;
+  topic?: string;
+}
+
+export interface ScanResult {
+  scan_id: string;
+  brand_name: string;
+  category?: string;
+  score: number;
+  prompts_used: number;
+  prompts_matched: number;
+  competitor_scores: ScanCompetitorScore[];
+  recommendations: ScanRecommendation[];
+  created_at: string;
+}
+
 export interface TierLimits {
   max_brands: number;
   max_queries: number;
@@ -140,51 +163,23 @@ export interface TierLimits {
 
 export const TIER_LIMITS: Record<Tier, TierLimits> = {
   free: {
-    max_brands: 1,
-    max_queries: 10,
-    max_competitors: 0,
-    data_retention_days: 7,
-    has_competitor_comparison: false,
-    has_recommendations: false,
-    has_api_access: false,
-    has_pdf_export: false,
-    has_csv_export: false,
-    max_seats: 1,
+    max_brands: 1, max_queries: 10, max_competitors: 0, data_retention_days: 7,
+    has_competitor_comparison: false, has_recommendations: false,
+    has_api_access: false, has_pdf_export: false, has_csv_export: false, max_seats: 1,
   },
   starter: {
-    max_brands: 1,
-    max_queries: 100,
-    max_competitors: 3,
-    data_retention_days: 30,
-    has_competitor_comparison: true,
-    has_recommendations: true,
-    has_api_access: false,
-    has_pdf_export: false,
-    has_csv_export: false,
-    max_seats: 1,
+    max_brands: 1, max_queries: 100, max_competitors: 3, data_retention_days: 30,
+    has_competitor_comparison: true, has_recommendations: true,
+    has_api_access: false, has_pdf_export: false, has_csv_export: false, max_seats: 1,
   },
   professional: {
-    max_brands: 3,
-    max_queries: 500,
-    max_competitors: 10,
-    data_retention_days: 90,
-    has_competitor_comparison: true,
-    has_recommendations: true,
-    has_api_access: false,
-    has_pdf_export: false,
-    has_csv_export: true,
-    max_seats: 1,
+    max_brands: 3, max_queries: 500, max_competitors: 10, data_retention_days: 90,
+    has_competitor_comparison: true, has_recommendations: true,
+    has_api_access: false, has_pdf_export: false, has_csv_export: true, max_seats: 1,
   },
   business: {
-    max_brands: 10,
-    max_queries: 2000,
-    max_competitors: 10,
-    data_retention_days: 180,
-    has_competitor_comparison: true,
-    has_recommendations: true,
-    has_api_access: true,
-    has_pdf_export: true,
-    has_csv_export: true,
-    max_seats: 3,
+    max_brands: 10, max_queries: 2000, max_competitors: 10, data_retention_days: 180,
+    has_competitor_comparison: true, has_recommendations: true,
+    has_api_access: true, has_pdf_export: true, has_csv_export: true, max_seats: 3,
   },
 };
