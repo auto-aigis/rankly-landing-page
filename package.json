@@ -37,9 +37,9 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
+    "@types/react": "^19.0.6",
+    "@types/react-dom": "^19.0.2",
     "typescript": "^5.7.3",
     "eslint": "^8.57.0"
-    "@types/react-dom": "^19.0.2",
-    "typescript": "^5.7.3"
   }
 }
