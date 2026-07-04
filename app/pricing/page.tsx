@@ -1,1 +1,152 @@
-'use client';\n\nimport { useEffect, useState } from 'react';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Badge } from '@/components/ui/badge';\nimport { useAuth } from '@/app/_lib/hooks';\nimport { analyticsApi } from '@/app/_lib/api';\n\nexport default function PricingPage() {\n  const { user } = useAuth();\n  const [paddleReady, setPaddleReady] = useState(false);\n  const priceIds = {\n    starter: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_STARTER ?? null,\n    professional: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_PROFESSIONAL ?? null,\n  };\n\n  useEffect(() => {\n    if (document.querySelector('script[src*=\"paddle\"]')) {\n      setPaddleReady(true);\n      return;\n    }\n    const script = document.createElement('script');\n    script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';\n    script.async = true;\n    script.onload = () => {\n      const Paddle = (window as any).Paddle;\n      if (Paddle) {\n        Paddle.Environment.set('sandbox');\n        Paddle.Initialize({\n          token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || '',\n          eventCallback: () => {},\n        });\n        setPaddleReady(true);\n      }\n    };\n    document.head.appendChild(script);\n  }, []);\n\n  const handleCheckout = async (tier: 'starter' | 'professional') => {\n    await analyticsApi.recordEvent('paddle_cta_clicked');\n    if (!user) {\n      window.location.href = '/login?redirect=/pricing';\n      return;\n    }\n    const priceId = priceIds[tier];\n    if (!priceId) {\n      alert(`Price not configured for ${tier}`);\n      return;\n    }\n    const Paddle = (window as any).Paddle;\n    if (!Paddle) {\n      alert('Payment service loading... please try again');\n      return;\n    }\n    Paddle.Checkout.open({\n      items: [{ priceId }],\n      customData: { userId: user.id },\n    });\n  };\n\n  return (\n    <div className=\"max-w-6xl mx-auto p-6\">\n      <div className=\"text-center mb-12\">\n        <h1 className=\"text-4xl font-bold text-gray-900 mb-4\">Simple, Transparent Pricing</h1>\n        <p className=\"text-lg text-gray-600\">Track your AI visibility with confidence</p>\n      </div>\n\n      <div className=\"grid md:grid-cols-3 gap-6\">\n        <Card className=\"border-gray-200\">\n          <CardHeader>\n            <CardTitle className=\"text-gray-900\">Free</CardTitle>\n            <CardDescription>One-time scoring</CardDescription>\n          </CardHeader>\n          <CardContent className=\"space-y-4\">\n            <div>\n              <p className=\"text-3xl font-bold text-gray-900\">$0</p>\n              <p className=\"text-sm text-gray-600\">Always free</p>\n            </div>\n            <ul className=\"space-y-2 text-sm text-gray-700\">\n              <li>✓ One AI visibility score</li>\n              <li>✓ Competitor comparison</li>\n              <li>✓ Actionable recommendations</li>\n              <li>✗ No tracking</li>\n              <li>✗ No history</li>\n            </ul>\n            <Button variant=\"outline\" className=\"w-full text-gray-700 border-gray-300 hover:bg-gray-50\">\n              Try for Free\n            </Button>\n          </CardContent>\n        </Card>\n\n        <Card className=\"border-gray-200\">\n          <CardHeader>\n            <CardTitle className=\"text-gray-900\">Starter</CardTitle>\n            <CardDescription>For growing brands</CardDescription>\n          </CardHeader>\n          <CardContent className=\"space-y-4\">\n            <div>\n              <p className=\"text-3xl font-bold text-blue-600\">$49</p>\n              <p className=\"text-sm text-gray-600\">/month</p>\n            </div>\n            <ul className=\"space-y-2 text-sm text-gray-700\">\n              <li>✓ Weekly automated tracking</li>\n              <li>✓ Email reports</li>\n              <li>✓ Track 1 brand</li>\n              <li>✓ Score history</li>\n              <li>✗ Competitor alerts</li>\n            </ul>\n            <Button\n              onClick={() => handleCheckout('starter')}\n              disabled={!paddleReady}\n              className=\"w-full bg-blue-600 hover:bg-blue-700 text-white\"\n            >\n              Choose Starter\n            </Button>\n          </CardContent>\n        </Card>\n\n        <Card className=\"border-2 border-blue-600 relative\">\n          <div className=\"absolute -top-3 right-4 bg-white px-2\">\n            <Badge className=\"bg-blue-600\">Most Popular</Badge>\n          </div>\n          <CardHeader>\n            <CardTitle className=\"text-gray-900\">Professional</CardTitle>\n            <CardDescription>For agencies & enterprises</CardDescription>\n          </CardHeader>\n          <CardContent className=\"space-y-4\">\n            <div>\n              <p className=\"text-3xl font-bold text-blue-600\">$149</p>\n              <p className=\"text-sm text-gray-600\">/month</p>\n            </div>\n            <ul className=\"space-y-2 text-sm text-gray-700\">\n              <li>✓ Weekly tracking</li>\n              <li>✓ Email reports</li>\n              <li>✓ Unlimited brands</li>\n              <li>✓ Competitor change alerts</li>\n              <li>✓ Priority support</li>\n            </ul>\n            <Button\n              onClick={() => handleCheckout('professional')}\n              disabled={!paddleReady}\n              className=\"w-full bg-blue-600 hover:bg-blue-700 text-white\"\n            >\n              Choose Professional\n            </Button>\n          </CardContent>\n        </Card>\n      </div>\n    </div>\n  );\n}\n
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/app/_lib/hooks';
+import { analyticsApi } from '@/app/_lib/api';
+
+export default function PricingPage() {
+  const { user } = useAuth();
+  const [paddleReady, setPaddleReady] = useState(false);
+  const priceIds = {
+    starter: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_STARTER ?? null,
+    professional: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID_PROFESSIONAL ?? null,
+  };
+
+  useEffect(() => {
+    if (document.querySelector('script[src*="paddle"]')) {
+      setPaddleReady(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+    script.async = true;
+    script.onload = () => {
+      const Paddle = (window as any).Paddle;
+      if (Paddle) {
+        Paddle.Environment.set('sandbox');
+        Paddle.Initialize({
+          token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || '',
+          eventCallback: () => {},
+        });
+        setPaddleReady(true);
+      }
+    };
+    document.head.appendChild(script);
+  }, []);
+
+  const handleCheckout = async (tier: 'starter' | 'professional') => {
+    await analyticsApi.recordEvent('paddle_cta_clicked');
+    if (!user) {
+      window.location.href = '/login?redirect=/pricing';
+      return;
+    }
+    const priceId = priceIds[tier];
+    if (!priceId) {
+      alert(`Price not configured for ${tier}`);
+      return;
+    }
+    const Paddle = (window as any).Paddle;
+    if (!Paddle) {
+      alert('Payment service loading... please try again');
+      return;
+    }
+    Paddle.Checkout.open({
+      items: [{ priceId }],
+      customData: { userId: user.id },
+    });
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h1>
+        <p className="text-lg text-gray-600">Track your AI visibility with confidence</p>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6">
+        <Card className="border-gray-200">
+          <CardHeader>
+            <CardTitle className="text-gray-900">Free</CardTitle>
+            <CardDescription>One-time scoring</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-3xl font-bold text-gray-900">$0</p>
+              <p className="text-sm text-gray-600">Always free</p>
+            </div>
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li>✓ One AI visibility score</li>
+              <li>✓ Competitor comparison</li>
+              <li>✓ Actionable recommendations</li>
+              <li>✗ No tracking</li>
+              <li>✗ No history</li>
+            </ul>
+            <Button variant="outline" className="w-full text-gray-700 border-gray-300 hover:bg-gray-50">
+              Try for Free
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-gray-200">
+          <CardHeader>
+            <CardTitle className="text-gray-900">Starter</CardTitle>
+            <CardDescription>For growing brands</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-3xl font-bold text-blue-600">$49</p>
+              <p className="text-sm text-gray-600">/month</p>
+            </div>
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li>✓ Weekly automated tracking</li>
+              <li>✓ Email reports</li>
+              <li>✓ Track 1 brand</li>
+              <li>✓ Score history</li>
+              <li>✗ Competitor alerts</li>
+            </ul>
+            <Button
+              onClick={() => handleCheckout('starter')}
+              disabled={!paddleReady}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Choose Starter
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-blue-600 relative">
+          <div className="absolute -top-3 right-4 bg-white px-2">
+            <Badge className="bg-blue-600">Most Popular</Badge>
+          </div>
+          <CardHeader>
+            <CardTitle className="text-gray-900">Professional</CardTitle>
+            <CardDescription>For agencies & enterprises</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-3xl font-bold text-blue-600">$149</p>
+              <p className="text-sm text-gray-600">/month</p>
+            </div>
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li>✓ Weekly tracking</li>
+              <li>✓ Email reports</li>
+              <li>✓ Unlimited brands</li>
+              <li>✓ Competitor change alerts</li>
+              <li>✓ Priority support</li>
+            </ul>
+            <Button
+              onClick={() => handleCheckout('professional')}
+              disabled={!paddleReady}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Choose Professional
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
