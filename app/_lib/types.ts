@@ -34,3 +34,8 @@ export interface ApiKeyStatus {
   service_name: 'openai' | 'perplexity';
   masked_key: string;
 }
+
+export const TIER_LIMITS = {
+  starter: 5,
+  professional: 50,
+};

@@ -1,60 +1,71 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/_lib/hooks';
 import { scoreApi } from '@/app/_lib/api';
-import { ScoreHistoryItem } from '@/app/_lib/types';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import Link from 'next/link';
 
 export default function DashboardPage() {
-  const [scores, setScores] = useState<ScoreHistoryItem[]>([]);
+  const router = useRouter();
+  const { user } = useAuth();
+  const [scores, setScores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    scoreApi
-      .getHistory()
-      .then(setScores)
-      .catch(() => setScores([]))
-      .finally(() => setLoading(false));
-  }, []);
+    const fetchScores = async () => {
+      try {
+        const history = await scoreApi.getHistory();
+        setScores(history || []);
+      } catch (error) {
+        console.error('Failed to load scores:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user) {
+      fetchScores();
+    }
+  }, [user]);
+
+  if (loading) {
+    return <div className="p-6">Loading...</div>;
+  }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Scores</h1>
-      <p className="text-gray-600 mb-6">Track your brand's AI visibility over time</p>
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
+        <p className="text-lg text-gray-600">{"Track your brand's AI visibility"}</p>
+      </div>
 
-      {loading ? (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-lg" />
-          ))}
-        </div>
-      ) : scores.length === 0 ? (
+      {scores.length === 0 ? (
         <Card className="border-gray-200">
-          <CardContent className="pt-6 text-center text-gray-600">
-            No scores yet. Get your first AI visibility score!
+          <CardContent className="pt-6">
+            <p className="text-gray-600 text-center mb-4">No scores yet. Run your first scan to get started.</p>
+            <div className="text-center">
+              <Button onClick={() => router.push('/')} className="bg-blue-600 hover:bg-blue-700 text-white">
+                Get Started
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="grid gap-6">
           {scores.map((score) => (
-            <Link key={score.id} href={`/results/${score.id}`}>
-              <Card className="border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{score.brand_name}</h3>
-                      <p className="text-sm text-gray-500">{score.category}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-blue-600">{score.score_percentage}%</p>
-                      <p className="text-xs text-gray-500">{new Date(score.created_at).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+            <Card key={score.id} className="border-gray-200">
+              <CardHeader>
+                <CardTitle className="text-gray-900">{score.brand_name}</CardTitle>
+                <CardDescription>{score.category}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold text-blue-600 mb-2">{score.score_percentage}%</p>
+                <Button onClick={() => router.push(`/results/${score.id}`)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  View Details
+                </Button>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

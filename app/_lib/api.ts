@@ -75,12 +75,29 @@ export const paymentApi = {
       method: 'POST',
       body: JSON.stringify({ transaction_id: transactionId }),
     }),
-};
 
 export const analyticsApi = {
   recordEvent: (eventName: string, scoreId?: string) =>
     apiFetch<{ status: string }>('/api/events', {
       method: 'POST',
       body: JSON.stringify({ event_name: eventName, score_id: scoreId }),
+    }),
+};
+
+export const scanApi = {
+  scan: (brandName: string, websiteUrl?: string) =>
+    apiFetch<any>('/api/scan', {
+      method: 'POST',
+      body: JSON.stringify({ brand_name: brandName, website_url: websiteUrl }),
+    }),
+  getStatus: (scanId: string) => apiFetch<any>(`/api/scan/${scanId}`),
+};
+
+export const coreApi = {
+  getCore: () => apiFetch<any>('/api/core'),
+  submitCore: (data: any) =>
+    apiFetch<any>('/api/core', {
+      method: 'POST',
+      body: JSON.stringify(data),
     }),
 };

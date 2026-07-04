@@ -22,14 +22,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (!user && !loading) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
   if (loading) return <div className="bg-white min-h-screen" />;
 
   if (!user) {
-    useEffect(() => {
-      router.push('/login');
-    }, [router]);
     return null;
   }
+
 
   const handleLogout = async () => {
     await logout();
