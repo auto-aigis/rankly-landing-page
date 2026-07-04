@@ -39,3 +39,10 @@ export const TIER_LIMITS = {
   starter: 5,
   professional: 50,
 };
+
+export interface DashboardData {
+  totalScores: number;
+  averageScore: number;
+  topBrand: string;
+  recentScores: ScoreHistoryItem[];
+}

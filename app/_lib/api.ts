@@ -102,3 +102,12 @@ export const coreApi = {
       body: JSON.stringify(data),
     }),
 };
+
+export const reportsApi = {
+  getVisibility: () => apiFetch<any>('/api/reports/visibility'),
+  getRecommendations: () => apiFetch<any>('/api/reports/recommendations'),
+  generateReport: (scoreId: string) =>
+    apiFetch<any>(`/api/reports/${scoreId}`, {
+      method: 'POST',
+    }),
+};
