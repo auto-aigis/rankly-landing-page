@@ -46,3 +46,10 @@ export interface DashboardData {
   topBrand: string;
   recentScores: ScoreHistoryItem[];
 }
+
+export interface Query {
+  id: string;
+  query: string;
+  results: any[];
+  created_at: string;
+}

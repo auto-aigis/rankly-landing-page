@@ -85,24 +85,6 @@ export const analyticsApi = {
     }),
 };
 
-export const scanApi = {
-  scan: (brandName: string, websiteUrl?: string) =>
-    apiFetch<any>('/api/scan', {
-      method: 'POST',
-      body: JSON.stringify({ brand_name: brandName, website_url: websiteUrl }),
-    }),
-  getStatus: (scanId: string) => apiFetch<any>(`/api/scan/${scanId}`),
-};
-
-export const coreApi = {
-  getCore: () => apiFetch<any>('/api/core'),
-  submitCore: (data: any) =>
-    apiFetch<any>('/api/core', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-};
-
 export const reportsApi = {
   getVisibility: () => apiFetch<any>('/api/reports/visibility'),
   getRecommendations: () => apiFetch<any>('/api/reports/recommendations'),
@@ -110,4 +92,30 @@ export const reportsApi = {
     apiFetch<any>(`/api/reports/${scoreId}`, {
       method: 'POST',
     }),
+};
+
+export const queriesApi = {
+  getAll: () => apiFetch<any[]>('/api/queries'),
+  create: (query: string) =>
+    apiFetch<any>('/api/queries', {
+      method: 'POST',
+      body: JSON.stringify({ query }),
+    }),
+  delete: (queryId: string) =>
+    apiFetch<{ status: string }>(`/api/queries/${queryId}`, { method: 'DELETE' }),
+};
+
+export const competitorsApi = {
+  getAll: () => apiFetch<any[]>('/api/competitors'),
+  getReport: () => apiFetch<any>('/api/reports/competitors'),
+};
+
+export const gapsApi = {
+  getAll: () => apiFetch<any[]>('/api/gaps'),
+  getReport: () => apiFetch<any>('/api/reports/gaps'),
+};
+
+export const citationsApi = {
+  getAll: () => apiFetch<any[]>('/api/citations'),
+  getReport: () => apiFetch<any>('/api/reports/citations'),
 };
