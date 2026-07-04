@@ -75,6 +75,7 @@ export const paymentApi = {
       method: 'POST',
       body: JSON.stringify({ transaction_id: transactionId }),
     }),
+};
 
 export const analyticsApi = {
   recordEvent: (eventName: string, scoreId?: string) =>
