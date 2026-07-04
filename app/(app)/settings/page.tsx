@@ -1,201 +1,140 @@
-"use client";
-
-export const dynamic = 'force-dynamic';
+'use client';
 
 import { useEffect, useState } from 'react';
+import { settingsApi } from '@/app/_lib/api';
+import { ApiKeyStatus } from '@/app/_lib/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { settingsApi } from '@/app/_lib/api';
-import { SettingsData } from '@/app/_lib/types';
-import { Loader2, Save, Key, AlertCircle, Check } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function SettingsPage() {
-  const [data, setData] = useState<SettingsData | null>(null);
+  const [keys, setKeys] = useState<ApiKeyStatus[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-
-  const [displayName, setDisplayName] = useState('');
-  const [brandName, setBrandName] = useState('');
-  const [websiteUrl, setWebsiteUrl] = useState('');
-  const [competitors, setCompetitors] = useState<string[]>(['']);
   const [openaiKey, setOpenaiKey] = useState('');
   const [perplexityKey, setPerplexityKey] = useState('');
+  const [showKeys, setShowKeys] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    loadSettings();
+    settingsApi
+      .getKeys()
+      .then(setKeys)
+      .catch(() => setKeys([]))
+      .finally(() => setLoading(false));
   }, []);
 
-  const loadSettings = async () => {
-    try {
-      const settings = await settingsApi.get();
-      setData(settings);
-      setDisplayName(settings.user.display_name || '');
-      setBrandName(settings.brands[0]?.name || '');
-      setWebsiteUrl(settings.brands[0]?.website_url || '');
-      setCompetitors(settings.competitors.length > 0 ? settings.competitors.map((c) => c.name) : ['']);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async () => {
+  const handleSaveOpenAI = async () => {
     setSaving(true);
-    setError('');
-    setSuccess(false);
     try {
-      await settingsApi.update({
-        display_name: displayName || undefined,
-        brand_name: brandName || undefined,
-        website_url: websiteUrl || undefined,
-        competitors: competitors.filter((c) => c.trim()),
-        openai_api_key: openaiKey || undefined,
-        perplexity_api_key: perplexityKey || undefined,
-      });
-      setSuccess(true);
+      await settingsApi.updateKey('openai', openaiKey);
       setOpenaiKey('');
+      const updated = await settingsApi.getKeys();
+      setKeys(updated);
+    } catch {}
+    setSaving(false);
+  };
+
+  const handleSavePerplexity = async () => {
+    setSaving(true);
+    try {
+      await settingsApi.updateKey('perplexity', perplexityKey);
       setPerplexityKey('');
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
-    } finally {
-      setSaving(false);
-    }
+      const updated = await settingsApi.getKeys();
+      setKeys(updated);
+    } catch {}
+    setSaving(false);
   };
-
-  const updateCompetitor = (index: number, value: string) => {
-    const updated = [...competitors];
-    updated[index] = value;
-    setCompetitors(updated);
-  };
-
-  const addCompetitor = () => setCompetitors([...competitors, '']);
-  const removeCompetitor = (index: number) => setCompetitors(competitors.filter((_, i) => i !== index));
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
-        <p className="text-gray-600">Manage your account and preferences</p>
-      </div>
+    <div className="max-w-2xl mx-auto p-6">
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
+      <p className="text-gray-600 mb-6">Manage your API keys for scoring</p>
 
-      {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg flex items-center gap-2">
-          <AlertCircle className="w-4 h-4" />
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="p-3 text-sm text-green-600 bg-green-50 rounded-lg flex items-center gap-2">
-          <Check className="w-4 h-4" />
-          Settings saved successfully!
-        </div>
-      )}
-
-      <Card>
+      <Card className="border-gray-200">
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>Your personal information</CardDescription>
+          <CardTitle className="text-gray-900">API Keys</CardTitle>
+          <CardDescription>Optional: provide your own OpenAI and Perplexity keys</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="displayName">Display Name</Label>
-            <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" />
-          </div>
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input value={data?.user.email || ''} disabled className="bg-gray-50" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Brand</CardTitle>
-          <CardDescription>Your primary brand information</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="brandName">Brand Name</Label>
-            <Input id="brandName" value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="Acme Inc." />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="websiteUrl">Website URL</Label>
-            <Input id="websiteUrl" type="url" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://acme.com" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Competitors</CardTitle>
-          <CardDescription>Brands you want to track against</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {competitors.map((comp, i) => (
-            <div key={i} className="flex gap-2">
-              <Input value={comp} onChange={(e) => updateCompetitor(i, e.target.value)} placeholder={`Competitor ${i + 1}`} />
-              {competitors.length > 1 && (
-                <Button variant="ghost" size="icon" onClick={() => removeCompetitor(i)}>×</Button>
-              )}
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <h3 className="font-semibold text-gray-900">OpenAI</h3>
+            {keys.find((k) => k.service_name === 'openai') ? (
+              <p className="text-sm text-gray-600">Key configured: {keys.find((k) => k.service_name === 'openai')?.masked_key}</p>
+            ) : (
+              <p className="text-sm text-gray-600">No key configured</p>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="openai-key" className="text-gray-900">API Key</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="openai-key"
+                  type={showKeys ? 'text' : 'password'}
+                  placeholder="sk-..."
+                  value={openaiKey}
+                  onChange={(e) => setOpenaiKey(e.target.value)}
+                  className="border-gray-300 text-gray-900 flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowKeys(!showKeys)}
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  {showKeys ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              </div>
+              <Button
+                onClick={handleSaveOpenAI}
+                disabled={saving || !openaiKey}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Save OpenAI Key
+              </Button>
             </div>
-          ))}
-          <Button variant="outline" onClick={addCompetitor}>+ Add Competitor</Button>
+          </div>
+
+          <div className="space-y-4 border-t border-gray-200 pt-6">
+            <h3 className="font-semibold text-gray-900">Perplexity</h3>
+            {keys.find((k) => k.service_name === 'perplexity') ? (
+              <p className="text-sm text-gray-600">Key configured: {keys.find((k) => k.service_name === 'perplexity')?.masked_key}</p>
+            ) : (
+              <p className="text-sm text-gray-600">No key configured</p>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="perplexity-key" className="text-gray-900">API Key</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="perplexity-key"
+                  type={showKeys ? 'text' : 'password'}
+                  placeholder="pplx-..."
+                  value={perplexityKey}
+                  onChange={(e) => setPerplexityKey(e.target.value)}
+                  className="border-gray-300 text-gray-900 flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowKeys(!showKeys)}
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  {showKeys ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              </div>
+              <Button
+                onClick={handleSavePerplexity}
+                disabled={saving || !perplexityKey}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Save Perplexity Key
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Key className="w-5 h-5" />
-            API Keys
-          </CardTitle>
-          <CardDescription>Add your own API keys for query simulation</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="openaiKey">OpenAI API Key</Label>
-            <Input
-              id="openaiKey"
-              type="password"
-              value={openaiKey}
-              onChange={(e) => setOpenaiKey(e.target.value)}
-              placeholder={data?.openai_api_key_set ? '••••••••' : 'sk-...'}
-            />
-            {data?.openai_api_key_set && <p className="text-xs text-gray-500">Already set - leave blank to keep</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="perplexityKey">Perplexity API Key</Label>
-            <Input
-              id="perplexityKey"
-              type="password"
-              value={perplexityKey}
-              onChange={(e) => setPerplexityKey(e.target.value)}
-              placeholder={data?.perplexity_api_key_set ? '••••••••' : 'pplx-...'}
-            />
-            {data?.perplexity_api_key_set && <p className="text-xs text-gray-500">Already set - leave blank to keep</p>}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Button onClick={handleSave} disabled={saving} className="w-full">
-        {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-        Save Changes
-      </Button>
     </div>
   );
 }

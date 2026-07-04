@@ -1,142 +1,129 @@
-"use client";
+'use client';
 
-import { useState, ReactNode } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  LayoutDashboard,
-  Search,
-  BarChart3,
-  Users,
-  Lightbulb,
-  Settings,
-  CreditCard,
-  Key,
-  Menu,
-  X,
-  LogOut,
-  TrendingUp,
-  FileText,
-  Link2,
-} from 'lucide-react';
-import { useAuth } from './AuthProvider';
-import { authApi } from '../_lib/api';
+import { Menu, X, LogOut } from 'lucide-react';
+import { useAuth } from '@/app/_lib/hooks';
+import { Button } from '@/components/ui/button';
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/queries', label: 'Queries', icon: Search },
-  { href: '/dashboard/reports/visibility', label: 'Visibility', icon: TrendingUp },
-  { href: '/dashboard/reports/citations', label: 'Citations', icon: Link2 },
-  { href: '/dashboard/reports/competitors', label: 'Competitors', icon: Users },
-  { href: '/dashboard/reports/gaps', label: 'Knowledge Gaps', icon: FileText },
-  { href: '/dashboard/reports/recommendations', label: 'Recommendations', icon: Lightbulb },
+const NAV_ITEMS = [
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'Settings', href: '/settings' },
 ];
 
-const settingsItems = [
-  { href: '/settings', label: 'Settings', icon: Settings },
-  { href: '/settings/billing', label: 'Billing', icon: CreditCard },
-  { href: '/settings/team', label: 'Team', icon: Users },
-  { href: '/settings/api', label: 'API', icon: Key },
-];
-
-interface AppShellProps {
-  children: ReactNode;
-}
-
-export function AppShell({ children }: AppShellProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const { user, loading, logout } = useAuth();
+  const router = useRouter();
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const [open, setOpen] = useState(false);
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
-  const NavContent = () => (
-    <>
-      <div className="p-4 border-b border-gray-200">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-lg font-semibold text-gray-900">Rankly</span>
-        </Link>
-      </div>
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-              isActive(item.href)
-                ? 'bg-gray-100 text-gray-900 font-medium'
-                : 'text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            <item.icon className="w-5 h-5" />
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-      <div className="p-4 border-t border-gray-200 space-y-1">
-        {settingsItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-              isActive(item.href)
-                ? 'bg-gray-100 text-gray-900 font-medium'
-                : 'text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            <item.icon className="w-5 h-5" />
-            {item.label}
-          </Link>
-        ))}
-        <button
-          onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
-        >
-          <LogOut className="w-5 h-5" />
-          Logout
-        </button>
-      </div>
-    </>
-  );
+  if (loading) return <div className="bg-white min-h-screen" />;
+
+  if (!user) {
+    useEffect(() => {
+      router.push('/login');
+    }, [router]);
+    return null;
+  }
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-gray-200 z-40 flex items-center px-4">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-        >
-          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-        <Link href="/dashboard" className="flex items-center gap-2 mx-auto">
-          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <TrendingUp className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-semibold text-gray-900">Rankly</span>
-        </Link>
-      </header>
-
-      {sidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/20 z-40"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <aside
-        className={`fixed top-0 left-0 bottom-0 w-64 bg-white border-r border-gray-200 z-50 flex flex-col transition-transform duration-200 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0`}
-      >
-        <NavContent />
+    <div className="flex h-screen bg-white">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-64 flex-col border-r border-gray-200 bg-white">
+        <div className="p-6 border-b border-gray-200">
+          <h1 className="text-xl font-semibold text-gray-900">Rankly</h1>
+        </div>
+        <nav className="flex-1 p-4 space-y-2">
+          {NAV_ITEMS.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className={`block px-4 py-2 rounded-md text-sm ${
+                pathname === item.href
+                  ? 'bg-gray-100 font-medium text-gray-900'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-gray-200">
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            size="sm"
+            className="w-full justify-start text-gray-700 border-gray-300 hover:bg-gray-50"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        </div>
       </aside>
 
-      <main className="md:ml-64 p-4 md:p-6 pt-16 md:pt-6 min-h-screen">
-        {children}
-      </main>
+      {/* Mobile Top Bar + Drawer */}
+      <div className="md:hidden flex flex-col w-full">
+        <header className="h-14 border-b border-gray-200 bg-white flex items-center px-4 justify-between">
+          <button
+            onClick={() => setOpen(!open)}
+            className="p-2 hover:bg-gray-100 rounded-md text-gray-900"
+          >
+            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+          <h1 className="text-lg font-semibold text-gray-900">Rankly</h1>
+          <div className="w-9" />
+        </header>
+
+        {open && (
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setOpen(false)} />
+        )}
+
+        <nav
+          className={`fixed left-0 top-14 h-full w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-200 ${
+            open ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="p-4 space-y-2">
+            {NAV_ITEMS.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className={`block px-4 py-2 rounded-md text-sm ${
+                  pathname === item.href
+                    ? 'bg-gray-100 font-medium text-gray-900'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+          <div className="p-4 border-t border-gray-200">
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              size="sm"
+              className="w-full justify-start text-gray-700 border-gray-300 hover:bg-gray-50"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <main className={`flex-1 overflow-auto bg-white md:ml-0`}>{children}</main>
     </div>
   );
 }
