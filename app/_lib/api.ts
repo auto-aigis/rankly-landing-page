@@ -139,6 +139,7 @@ export const analyticsApi = {
 
 export const queriesApi = {
   getQueries: () => apiFetch<any>('/api/queries'),
+  getAll: () => apiFetch<any>('/api/queries'),
 };
 
 export const citationsApi = {
