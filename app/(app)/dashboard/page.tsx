@@ -50,7 +50,7 @@ function DashboardContent() {
             Track your brand&#39;s AI visibility over time. Run a new score or view
             your tracked brands.
           </p>
-          </p>
+
           <div className="mt-6 space-y-4">
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <h3 className="font-semibold text-gray-900">Get Started</h3>
