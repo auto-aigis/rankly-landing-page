@@ -1,138 +1,131 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { settingsApi } from '@/app/_lib/api';
-import { ApiKeyStatus } from '@/app/_lib/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff } from 'lucide-react';
+import { settingsApi } from '@/app/_lib/api';
+import type { ApiKey } from '@/app/_lib/types';
 
-export default function SettingsPage() {
-  const [keys, setKeys] = useState<ApiKeyStatus[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function Settings() {
+  const [keys, setKeys] = useState<ApiKey[]>([]);
   const [openaiKey, setOpenaiKey] = useState('');
   const [perplexityKey, setPerplexityKey] = useState('');
-  const [showKeys, setShowKeys] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     settingsApi
       .getKeys()
-      .then(setKeys)
-      .catch(() => setKeys([]))
+      .then((data) => {
+        setKeys(data);
+      })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
   const handleSaveOpenAI = async () => {
+    if (!openaiKey) return;
     setSaving(true);
     try {
-      await settingsApi.updateKey('openai', openaiKey);
+      await settingsApi.saveKey('openai', openaiKey);
+      setSaved(true);
       setOpenaiKey('');
-      const updated = await settingsApi.getKeys();
-      setKeys(updated);
-    } catch {}
-    setSaving(false);
+      setTimeout(() => setSaved(false), 3000);
+      const data = await settingsApi.getKeys();
+      setKeys(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSavePerplexity = async () => {
+    if (!perplexityKey) return;
     setSaving(true);
     try {
-      await settingsApi.updateKey('perplexity', perplexityKey);
+      await settingsApi.saveKey('perplexity', perplexityKey);
+      setSaved(true);
       setPerplexityKey('');
-      const updated = await settingsApi.getKeys();
-      setKeys(updated);
-    } catch {}
-    setSaving(false);
+      setTimeout(() => setSaved(false), 3000);
+      const data = await settingsApi.getKeys();
+      setKeys(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-      <p className="text-gray-600 mb-6">Manage your API keys for scoring</p>
+    <div className="mx-auto max-w-2xl p-6">
+      <h1 className="mb-6 text-3xl font-bold text-gray-900">Settings</h1>
 
-      <Card className="border-gray-200">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-gray-900">API Keys</CardTitle>
-          <CardDescription>Optional: provide your own OpenAI and Perplexity keys</CardDescription>
+          <CardTitle>API Keys</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900">OpenAI</h3>
-            {keys.find((k) => k.service_name === 'openai') ? (
-              <p className="text-sm text-gray-600">Key configured: {keys.find((k) => k.service_name === 'openai')?.masked_key}</p>
-            ) : (
-              <p className="text-sm text-gray-600">No key configured</p>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="openai-key" className="text-gray-900">API Key</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="openai-key"
-                  type={showKeys ? 'text' : 'password'}
-                  placeholder="sk-..."
-                  value={openaiKey}
-                  onChange={(e) => setOpenaiKey(e.target.value)}
-                  className="border-gray-300 text-gray-900 flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowKeys(!showKeys)}
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  {showKeys ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </Button>
+          {loading ? (
+            <p className="text-gray-500">Loading...</p>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-900">OpenAI API Key</h3>
+                <p className="text-sm text-gray-600">
+                  {keys.find((k) => k.service_name === 'openai')
+                    ? `Saved: ${keys.find((k) => k.service_name === 'openai')?.api_key_masked}`
+                    : 'No key saved'}
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    type="password"
+                    placeholder="Enter OpenAI API key"
+                    value={openaiKey}
+                    onChange={(e) => setOpenaiKey(e.target.value)}
+                  />
+                  <Button
+                    onClick={handleSaveOpenAI}
+                    disabled={!openaiKey || saving}
+                    className="whitespace-nowrap"
+                  >
+                    Save
+                  </Button>
+                </div>
               </div>
-              <Button
-                onClick={handleSaveOpenAI}
-                disabled={saving || !openaiKey}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Save OpenAI Key
-              </Button>
-            </div>
-          </div>
 
-          <div className="space-y-4 border-t border-gray-200 pt-6">
-            <h3 className="font-semibold text-gray-900">Perplexity</h3>
-            {keys.find((k) => k.service_name === 'perplexity') ? (
-              <p className="text-sm text-gray-600">Key configured: {keys.find((k) => k.service_name === 'perplexity')?.masked_key}</p>
-            ) : (
-              <p className="text-sm text-gray-600">No key configured</p>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="perplexity-key" className="text-gray-900">API Key</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="perplexity-key"
-                  type={showKeys ? 'text' : 'password'}
-                  placeholder="pplx-..."
-                  value={perplexityKey}
-                  onChange={(e) => setPerplexityKey(e.target.value)}
-                  className="border-gray-300 text-gray-900 flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowKeys(!showKeys)}
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  {showKeys ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </Button>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-gray-900">Perplexity API Key</h3>
+                <p className="text-sm text-gray-600">
+                  {keys.find((k) => k.service_name === 'perplexity')
+                    ? `Saved: ${keys.find((k) => k.service_name === 'perplexity')?.api_key_masked}`
+                    : 'No key saved'}
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    type="password"
+                    placeholder="Enter Perplexity API key"
+                    value={perplexityKey}
+                    onChange={(e) => setPerplexityKey(e.target.value)}
+                  />
+                  <Button
+                    onClick={handleSavePerplexity}
+                    disabled={!perplexityKey || saving}
+                    className="whitespace-nowrap"
+                  >
+                    Save
+                  </Button>
+                </div>
               </div>
-              <Button
-                onClick={handleSavePerplexity}
-                disabled={saving || !perplexityKey}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Save Perplexity Key
-              </Button>
-            </div>
-          </div>
+
+              {saved && (
+                <p className="text-sm text-green-600">✓ API key saved successfully</p>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

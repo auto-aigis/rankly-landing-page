@@ -1,74 +1,79 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/app/_lib/hooks';
-import { scoreApi } from '@/app/_lib/api';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { paymentsApi } from '@/app/_lib/api';
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const [verifying, setVerifying] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
-  const [scores, setScores] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const checkout = searchParams.get('checkout');
+  const transactionId = searchParams.get('transaction_id');
 
   useEffect(() => {
-    const fetchScores = async () => {
-      try {
-        const history = await scoreApi.getHistory();
-        setScores(history || []);
-      } catch (error) {
-        console.error('Failed to load scores:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (user) {
-      fetchScores();
+    if (checkout === 'success' && transactionId) {
+      setVerifying(true);
+      paymentsApi
+        .verifyTransaction(transactionId)
+        .then(() => {
+          router.replace('/dashboard');
+        })
+        .catch(() => {
+          router.replace('/dashboard');
+        })
+        .finally(() => setVerifying(false));
     }
-  }, [user]);
+  }, [checkout, transactionId, router]);
 
-  if (loading) {
-    return <div className="p-6">Loading...</div>;
+  if (verifying) {
+    return (
+      <div className="mx-auto max-w-5xl p-6">
+        <p className="text-center text-gray-600">Payment processing... please wait</p>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-        <p className="text-lg text-gray-600">{"Track your brand's AI visibility"}</p>
-      </div>
-
-      {scores.length === 0 ? (
-        <Card className="border-gray-200">
-          <CardContent className="pt-6">
-            <p className="text-gray-600 text-center mb-4">No scores yet. Run your first scan to get started.</p>
-            <div className="text-center">
-              <Button onClick={() => router.push('/')} className="bg-blue-600 hover:bg-blue-700 text-white">
-                Get Started
-              </Button>
+    <div className="mx-auto max-w-5xl p-6">
+      <h1 className="mb-6 text-3xl font-bold text-gray-900">Dashboard</h1>
+      <Card>
+        <CardHeader>
+          <CardTitle>Welcome, {user?.display_name || user?.email}!</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600">
+            Track your brand's AI visibility over time. Run a new score or view
+            your tracked brands.
+          </p>
+          <div className="mt-6 space-y-4">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <h3 className="font-semibold text-gray-900">Get Started</h3>
+              <p className="mt-2 text-sm text-gray-600">
+                Subscribe to Rankly to track your brand continuously.
+              </p>
+              <a
+                href="/pricing"
+                className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                View Pricing
+              </a>
             </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-6">
-          {scores.map((score) => (
-            <Card key={score.id} className="border-gray-200">
-              <CardHeader>
-                <CardTitle className="text-gray-900">{score.brand_name}</CardTitle>
-                <CardDescription>{score.category}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-blue-600 mb-2">{score.score_percentage}%</p>
-                <Button onClick={() => router.push(`/results/${score.id}`)} className="bg-blue-600 hover:bg-blue-700 text-white">
-                  View Details
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center text-gray-600">Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

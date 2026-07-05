@@ -1,26 +1,26 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { authApi } from '@/app/_lib/api';
 import { useAuth } from '@/app/_lib/hooks';
 
 function VerifyEmailContent() {
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
   const { refresh } = useAuth();
   const token = searchParams.get('token');
   const email = searchParams.get('email');
-  const [loading, setLoading] = useState(!!token);
-  const [error, setError] = useState('');
-  const [resendSent, setResendSent] = useState(false);
 
   useEffect(() => {
     if (token) {
+      setLoading(true);
       authApi
         .verifyEmail(token)
         .then(async () => {
@@ -28,81 +28,108 @@ function VerifyEmailContent() {
           router.push('/dashboard');
         })
         .catch((err) => {
-          setError(err instanceof Error ? err.message : 'Verification failed');
-          setLoading(false);
-        });
+          setError(
+            err instanceof Error ? err.message : 'Verification failed.'
+          );
+        })
+        .finally(() => setLoading(false));
     }
   }, [token, router, refresh]);
 
   const handleResend = async () => {
     if (!email) return;
+    setResending(true);
     try {
       await authApi.resendVerification(email);
-      setResendSent(true);
-      setTimeout(() => setResendSent(false), 3000);
-    } catch {}
+      setMessage('Email sent! Check your inbox.');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to resend verification.'
+      );
+    } finally {
+      setResending(false);
+    }
   };
 
-  if (token) {
-    if (loading && !error) {
-      return (
-        <Card className="w-full max-w-md border-gray-200">
-          <CardContent className="pt-6 text-center">
-            <p className="text-gray-700">Verifying your email...</p>
-          </CardContent>
-        </Card>
-      );
-    }
-    if (error) {
-      return (
-        <Card className="w-full max-w-md border-gray-200">
+  if (token && loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white px-4">
+        <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-red-600">Verification Failed</CardTitle>
+            <CardTitle>Verifying Email</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert><AlertDescription className="text-red-600">{error}</AlertDescription></Alert>
-            <Link href="/login">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Back to Login</Button>
-            </Link>
+          <CardContent>
+            <p className="text-gray-600">Please wait...</p>
           </CardContent>
         </Card>
-      );
-    }
+      </div>
+    );
+  }
+
+  if (token && error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Verification Failed</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-600">{error}</p>
+            <p className="mt-4 text-sm text-gray-600">
+              The verification link may have expired. Please request a new one.
+            </p>
+            <Button
+              onClick={handleResend}
+              disabled={resending}
+              className="mt-4 w-full"
+            >
+              {resending ? 'Sending...' : 'Resend Verification Email'}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
-    <Card className="w-full max-w-md border-gray-200">
-      <CardHeader>
-        <CardTitle className="text-gray-900">Check Your Email</CardTitle>
-        <CardDescription>We sent a verification link to {email}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-gray-600">Click the link in your email to verify your account and log in.</p>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleResend}
-          className="w-full text-gray-700 border-gray-300 hover:bg-gray-50"
-        >
-          Resend Verification Email
-        </Button>
-        {resendSent && <p className="text-sm text-green-600 text-center">Email sent!</p>}
-        <Link href="/login">
-          <Button variant="outline" className="w-full text-gray-700 border-gray-300 hover:bg-gray-50">
-            Back to Login
-          </Button>
-        </Link>
-      </CardContent>
-    </Card>
+    <div className="flex min-h-screen items-center justify-center bg-white px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Verify Your Email</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-gray-600">
+            Check your inbox — we sent a verification link to <strong>{email}</strong>.
+          </p>
+          {message && <p className="text-sm text-green-600">{message}</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <div className="space-y-2">
+            <Button
+              onClick={handleResend}
+              disabled={resending}
+              variant="outline"
+              className="w-full"
+            >
+              {resending ? 'Sending...' : 'Resend Verification Email'}
+            </Button>
+            <a
+              href="/login"
+              className="block rounded-lg border border-gray-300 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Sign In
+            </a>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
-export default function VerifyEmailPage() {
+export default function VerifyEmail() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-4">
-      <Suspense fallback={<div>Loading...</div>}>
-        <VerifyEmailContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<div className="p-6 text-center text-gray-600">Loading...</div>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

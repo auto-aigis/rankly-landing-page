@@ -1,97 +1,115 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { authApi } from '@/app/_lib/api';
 import { useAuth } from '@/app/_lib/hooks';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function LoginPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { user, loading } = useAuth();
+export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const redirect = searchParams.get('redirect') || '/dashboard';
-
-  useEffect(() => {
-    if (user && !loading) {
-      router.push(redirect);
-    }
-  }, [user, loading, router, redirect]);
+  const [loading, setLoading] = useState(false);
+  const [unverified, setUnverified] = useState(false);
+  const [resending, setResending] = useState(false);
+  const router = useRouter();
+  const { refresh } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
-
+    setLoading(true);
     try {
       await authApi.login(email, password);
-      router.push(redirect);
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
-      setIsLoading(false);
+      await refresh();
+      router.push('/dashboard');
+    } catch (err) {
+      if (err instanceof Error && err.message === 'email_not_verified') {
+        setUnverified(true);
+      } else {
+        setError(err instanceof Error ? err.message : 'Login failed.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
-
-  if (user) {
-    return null;
-  }
+  const handleResend = async () => {
+    setResending(true);
+    try {
+      await authApi.resendVerification(email);
+      setError('Email sent! Check your inbox.');
+      setTimeout(() => setError(''), 3000);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to resend verification.'
+      );
+    } finally {
+      setResending(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md border-gray-200">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-gray-900">Login to Rankly</CardTitle>
-          <CardDescription>Enter your credentials to continue</CardDescription>
+    <div className="flex min-h-screen items-center justify-center bg-white px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Sign In to Rankly</CardTitle>
         </CardHeader>
         <CardContent>
-          {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-800 text-sm">{error}</div>}
-
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
                 type="email"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="you@example.com"
                 required
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
                 type="password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="••••••••"
                 required
               />
             </div>
-
-            <Button type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-              {isLoading ? 'Logging in...' : 'Login'}
+            {error && <p className="text-sm text-red-600">{error}</p>}
+            {unverified && (
+              <div className="space-y-2 rounded-lg bg-yellow-50 p-3">
+                <p className="text-sm text-yellow-800">
+                  Please verify your email to continue.
+                </p>
+                <Button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  {resending ? 'Sending...' : 'Resend Verification Email'}
+                </Button>
+              </div>
+            )}
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-
           <p className="mt-4 text-center text-sm text-gray-600">
-            {"Don't have an account? "}
-            <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium">
+            Don't have an account?{' '}
+            <a href="/register" className="font-medium text-blue-600 hover:underline">
               Sign up
-            </Link>
+            </a>
           </p>
         </CardContent>
       </Card>

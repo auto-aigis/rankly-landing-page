@@ -2,54 +2,42 @@ export interface User {
   id: string;
   email: string;
   display_name: string | null;
+  is_email_verified: boolean;
   created_at: string;
 }
 
 export interface Subscription {
-  status: 'inactive' | 'active';
+  status: 'inactive' | 'active' | 'canceled';
   tier: 'starter' | 'professional' | null;
+  paddle_subscription_id: string | null;
   current_period_end: string | null;
 }
 
-export interface VisibilityScore {
+export interface ScoreRun {
   id: string;
   brand_name: string;
-  website_url?: string;
-  category: string;
-  score_percentage: number;
-  competitor_scores: { name: string; score: number }[];
-  recommendations: { title: string; description: string }[];
+  competitor_names: string[];
+  industry_category: string;
+  visibility_score: number;
+  competitor_scores: Record<string, number>;
+  recommendations: string[];
+  is_demo_mode: boolean;
   created_at: string;
 }
 
-export interface ScoreHistoryItem {
-  id: string;
-  brand_name: string;
-  category: string;
-  score_percentage: number;
-  created_at: string;
+export interface PricingTier {
+  name: string;
+  price: number;
+  billing_interval: string;
+  paddle_price_id: string;
+  features: string[];
 }
 
-export interface ApiKeyStatus {
+export interface PricingResponse {
+  tiers: PricingTier[];
+}
+
+export interface ApiKey {
   service_name: 'openai' | 'perplexity';
-  masked_key: string;
-}
-
-export const TIER_LIMITS = {
-  starter: 5,
-  professional: 50,
-};
-
-export interface DashboardData {
-  totalScores: number;
-  averageScore: number;
-  topBrand: string;
-  recentScores: ScoreHistoryItem[];
-}
-
-export interface Query {
-  id: string;
-  query: string;
-  results: any[];
-  created_at: string;
+  api_key_masked: string;
 }

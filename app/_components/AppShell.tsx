@@ -6,34 +6,43 @@ import { Menu, X, LogOut } from 'lucide-react';
 import { useAuth } from '@/app/_lib/hooks';
 import { Button } from '@/components/ui/button';
 
-const NAV_ITEMS = [
+interface AppShellProps {
+  children: React.ReactNode;
+}
+
+const navItems = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Settings', href: '/settings' },
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, loading, logout } = useAuth();
-  const router = useRouter();
+export default function AppShell({ children }: AppShellProps) {
+  const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const { user, loading, logout } = useAuth();
 
   useEffect(() => {
-    setOpen(false);
+    setMobileOpen(false);
   }, [pathname]);
 
   useEffect(() => {
-    if (!user && !loading) {
+    if (!loading && !user) {
       router.push('/login');
     }
   }, [user, loading, router]);
 
-  if (loading) return <div className="bg-white min-h-screen" />;
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
 
   if (!user) {
     return null;
   }
-
 
   const handleLogout = async () => {
     await logout();
@@ -42,92 +51,95 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-white">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 flex-col border-r border-gray-200 bg-white">
-        <div className="p-6 border-b border-gray-200">
+      <aside className="hidden w-64 border-r border-gray-200 bg-white md:block">
+        <div className="p-6">
           <h1 className="text-xl font-semibold text-gray-900">Rankly</h1>
         </div>
-        <nav className="flex-1 p-4 space-y-2">
-          {NAV_ITEMS.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className={`block px-4 py-2 rounded-md text-sm ${
-                pathname === item.href
-                  ? 'bg-gray-100 font-medium text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              {item.label}
-            </a>
-          ))}
+        <nav className="space-y-2 px-4">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                className={`block rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-gray-100 text-gray-900'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                {item.label}
+              </a>
+            );
+          })}
         </nav>
-        <div className="p-4 border-t border-gray-200">
+        <div className="absolute bottom-6 left-4 right-4">
           <Button
             onClick={handleLogout}
             variant="outline"
-            size="sm"
-            className="w-full justify-start text-gray-700 border-gray-300 hover:bg-gray-50"
+            className="w-full justify-start text-gray-700"
           >
-            <LogOut className="w-4 h-4 mr-2" />
+            <LogOut className="mr-2 h-4 w-4" />
             Logout
           </Button>
         </div>
       </aside>
 
-      {/* Mobile Top Bar + Drawer */}
-      <div className="md:hidden flex flex-col w-full">
-        <header className="h-14 border-b border-gray-200 bg-white flex items-center px-4 justify-between">
+      <div className="flex w-full flex-col md:hidden">
+        <div className="flex h-14 items-center border-b border-gray-200 bg-white px-4">
           <button
-            onClick={() => setOpen(!open)}
-            className="p-2 hover:bg-gray-100 rounded-md text-gray-900"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="rounded p-2 hover:bg-gray-100"
           >
-            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
-          <h1 className="text-lg font-semibold text-gray-900">Rankly</h1>
-          <div className="w-9" />
-        </header>
-
-        {open && (
-          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setOpen(false)} />
-        )}
-
-        <nav
-          className={`fixed left-0 top-14 h-full w-64 bg-white border-r border-gray-200 z-50 transform transition-transform duration-200 ${
-            open ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
-          <div className="p-4 space-y-2">
-            {NAV_ITEMS.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className={`block px-4 py-2 rounded-md text-sm ${
-                  pathname === item.href
-                    ? 'bg-gray-100 font-medium text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
+          <h1 className="flex-1 text-center text-lg font-semibold">Rankly</h1>
+          <div className="w-10" />
+        </div>
+        {mobileOpen && (
+          <>
+            <div
+              className="fixed inset-0 top-14 bg-black/20"
+              onClick={() => setMobileOpen(false)}
+            />
+            <nav className="absolute left-0 top-14 w-64 space-y-2 border-r border-gray-200 bg-white p-4">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className={`block rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'bg-gray-100 text-gray-900'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {item.label}
+                  </a>
+                );
+              })}
+              <hr className="my-4 border-gray-200" />
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="w-full justify-start text-gray-700"
               >
-                {item.label}
-              </a>
-            ))}
-          </div>
-          <div className="p-4 border-t border-gray-200">
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              size="sm"
-              className="w-full justify-start text-gray-700 border-gray-300 hover:bg-gray-50"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </nav>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </nav>
+          </>
+        )}
       </div>
 
-      {/* Main Content */}
-      <main className={`flex-1 overflow-auto bg-white md:ml-0`}>{children}</main>
+      <main className="flex-1 overflow-auto bg-gray-50 md:ml-0">
+        {children}
+      </main>
     </div>
   );
 }
