@@ -136,3 +136,11 @@ export const reportsApi = {
 export const analyticsApi = {
   getAnalytics: () => apiFetch<any>('/api/analytics'),
 };
+
+export const queriesApi = {
+  getQueries: () => apiFetch<any>('/api/queries'),
+};
+
+export const citationsApi = {
+  getCitations: () => apiFetch<any>('/api/citations'),
+};

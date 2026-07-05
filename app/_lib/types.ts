@@ -41,3 +41,11 @@ export interface ApiKey {
   service_name: 'openai' | 'perplexity';
   api_key_masked: string;
 }
+
+export interface DashboardData {
+  id?: string;
+  name?: string;
+  value?: number;
+  description?: string;
+  [key: string]: any;
+}
