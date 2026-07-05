@@ -1,161 +1,75 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/_lib/hooks';
 import { scoreApi } from '@/app/_lib/api';
 import type { ScoreRun } from '@/app/_lib/types';
 
-function ResultsContent() {
-  const searchParams = useSearchParams();
-  const runId = searchParams.get('run_id');
-  const [score, setScore] = useState<ScoreRun | null>(null);
+export default function Results() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [runs, setRuns] = useState<ScoreRun[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!runId) {
-      setError('No score run found.');
-      setLoading(false);
+    if (!user) {
+      router.push('/login?message=Please%20log%20in%20to%20view%20your%20scores');
       return;
     }
+  }, [user, router]);
 
-    const fetchScore = async () => {
-      try {
-        const data = await scoreApi.get(runId);
-        setScore(data);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Failed to load score.'
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchScore();
-  }, [runId]);
-
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-5xl p-6">
-        <p className="text-center text-gray-600">Loading results...</p>
-      </div>
-    );
-  }
-
-  if (error || !score) {
-    return (
-      <div className="mx-auto max-w-5xl p-6">
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-6">
-            <p className="text-red-700">{error || 'Score not found.'}</p>
-            <a
-              href="/"
-              className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              Run New Score
-            </a>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  useEffect(() => {
+    // In a real app, we would load runs from an API
+    setLoading(false);
+  }, []);
 
   return (
     <div className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-6 text-3xl font-bold text-gray-900">Your AI Visibility Score</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-900">Your Scores</h1>
+        <Link href="/" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+          Run New Score
+        </Link>
+      </div>
 
-      <div className="mb-6 grid gap-6 md:grid-cols-2">
+      {loading ? (
+        <div className="text-center text-gray-600">Loading...</div>
+      ) : runs.length === 0 ? (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-gray-700">Score for {score.brand_name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-5xl font-bold text-blue-600">
-              {score.visibility_score.toFixed(1)}%
-            </div>
-            <p className="mt-2 text-sm text-gray-600">
-              Appears in {score.visibility_score.toFixed(1)}% of AI responses
+          <CardContent className="pt-6">
+            <p className="text-center text-gray-600">
+              No scores yet.{' '}
+              <Link href="/" className="font-medium text-blue-600 hover:text-blue-700">
+                Run your first score
+              </Link>
             </p>
-            {score.is_demo_mode && (
-              <Badge className="mt-4" variant="outline">
-                Demo Mode
-              </Badge>
-            )}
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-gray-700">Compared to Competitors</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {Object.entries(score.competitor_scores).length > 0 ? (
-              <div className="space-y-2">
-                {Object.entries(score.competitor_scores).map(([name, score_val]) => (
-                  <div key={name} className="flex justify-between text-sm">
-                    <span className="text-gray-700">{name}</span>
-                    <span className="font-medium text-gray-900">
-                      {(score_val as number).toFixed(1)}%
-                    </span>
+      ) : (
+        <div className="grid gap-6">
+          {runs.map((run) => (
+            <Card key={run.id} className="cursor-pointer hover:shadow-lg">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle>{run.brand_name}</CardTitle>
+                    <p className="mt-2 text-sm text-gray-600">{run.industry_category}</p>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-600">No competitors to compare.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Recommendations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ol className="space-y-4">
-            {score.recommendations.map((rec, idx) => (
-              <li key={idx} className="flex gap-4">
-                <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
-                  {idx + 1}
+                  <Badge variant="secondary">{run.visibility_score}% Visibility</Badge>
                 </div>
-                <p className="text-gray-700">{rec}</p>
-              </li>
-            ))}
-          </ol>
-        </CardContent>
-      </Card>
-
-      <div className="flex gap-4">
-        <Button
-          onClick={() => {
-            window.location.href = '/pricing';
-          }}
-          className="flex-1"
-        >
-          Track this score over time
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => {
-            window.location.href = '/';
-          }}
-          className="flex-1"
-        >
-          Run Another Score
-        </Button>
-      </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">Competitors: {run.competitor_names.join(', ')}</p>
+                <p className="mt-2 text-sm text-gray-500">Ran on {new Date(run.created_at).toLocaleDateString()}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
-  );
-}
-
-export default function Results() {
-  return (
-    <Suspense fallback={<div className="p-6 text-center text-gray-600">Loading...</div>}>
-      <ResultsContent />
-    </Suspense>
   );
 }

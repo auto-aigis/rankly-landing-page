@@ -116,3 +116,23 @@ export const paymentsApi = {
       }
     ),
 };
+
+// Alias for backward compatibility
+export const paymentApi = paymentsApi;
+
+// Placeholder APIs for dashboard features (returns empty data)
+export const competitorsApi = {
+  getAnalysis: () => apiFetch<any>('/api/competitors/analysis'),
+};
+
+export const gapsApi = {
+  getGaps: () => apiFetch<any>('/api/gaps'),
+};
+
+export const reportsApi = {
+  getReports: () => apiFetch<any>('/api/reports'),
+};
+
+export const analyticsApi = {
+  getAnalytics: () => apiFetch<any>('/api/analytics'),
+};
