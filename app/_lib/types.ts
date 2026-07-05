@@ -49,3 +49,24 @@ export interface DashboardData {
   description?: string;
   [key: string]: any;
 }
+
+export interface Query {
+  id: string;
+  user_id: string;
+  content: string;
+  results?: any[];
+  created_at: string;
+}
+
+export const TIER_LIMITS = {
+  starter: {
+    queries_per_month: 100,
+    max_competitors: 5,
+    export_formats: ['csv'],
+  },
+  professional: {
+    queries_per_month: 1000,
+    max_competitors: 20,
+    export_formats: ['csv', 'json', 'pdf'],
+  },
+};
